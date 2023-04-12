@@ -16,9 +16,11 @@ class FileOpening_and_Paint():
         self.brush_color = "black"
         #initial size of eraser tool
         self.eraser_size = 10
+        #initialize image variable
         self.image = 0
+        #initialize a list which stores all events
         self.event_list = []
-        
+        #settung up canvas and bindings
         self.create_widgets()
         self.setup_bindings()
 
@@ -27,20 +29,21 @@ class FileOpening_and_Paint():
         self.canvas = tk.Canvas(self.root, bg="white")
         #packs canvas widget into main window
         self.canvas.pack(fill=tk.BOTH, expand=True)
-
+        #creates a button for the user to be able to choose a file to upload
         self.button = tk.Button(self.root, text="Choose file to upload", command=self.browse_file)
         self.button.pack(side="top")
-        #creates button widget
+        #creates brush button widget
         self.brush_button = tk.Button(self.root, text="Brush", command=self.set_brush_tool)
         #packs button widget into main window
         self.brush_button.pack(side="top")
-        #creates eraser button
-        self.eraser_button = tk.Button(self.root, text="Eraser", command=self.set_eraser_tool)
-        #packs eraser button into main window
+        #creates undo button
+        self.eraser_button = tk.Button(self.root, text="Undo", command=self.set_eraser_tool)
+        #packs undo button into main window
         self.eraser_button.pack(side="top")
-        #creates a Label widget with appropriate text and packs it into main window
+        #creates an erase all button and packs it into the canvas
         self.erase_all_button = tk.Button(self.root, text="Erase All", command=self.set_erase_all)
         self.erase_all_button.pack(side="top")
+        #bar to set brush size
         brush_size_label = tk.Label(self.root, text="Brush Size:")
         #label appears on the left side
         brush_size_label.pack(side="top")
@@ -52,12 +55,14 @@ class FileOpening_and_Paint():
         
 
     def browse_file(self):
+        #allowed file paths
         filetypes = (("JPEG files", "*.jpg"), ("PNG files", "*.png"), ("All files", "*.*"))
         filepath = filedialog.askopenfilename(title="Select an image file", filetypes=filetypes)
         if filepath:
             image = Image.open(filepath)
             image = image.convert("RGBA")
             self.image = ImageTk.PhotoImage(image)
+            #opens image into the canvas
             self.canvas.create_image(0, 0, anchor="nw", image=self.image)
 
     #sets up the event bindings for the canvas widget to enable drawing on the canvas with the brush tool    
@@ -77,11 +82,13 @@ class FileOpening_and_Paint():
     #sets the current tool to the eraser tool     
     def set_eraser_tool(self):
         #sets the instance variable current_tool to the string "eraser", indicating that the eraser tool is currently selected
-        self.current_tool = "eraser"
+        self.current_tool = "brush"
         if self.event_list:
+            #undo the last brush stroke
             self.remove_latest_event()
         
     def set_erase_all(self):
+        #erases everything on the campus and if there was an image, puts that back into the canvas
         if self.image != 0:
             self.canvas.create_image(0, 0, anchor="nw", image=self.image)
         else:
@@ -94,6 +101,7 @@ class FileOpening_and_Paint():
         self.brush_size = int(size)
 
     def remove_latest_event(self):
+        #undoes last brush stroke
         self.event_list.pop()
         self.canvas.delete("all")
         if self.image != 0:
@@ -116,8 +124,6 @@ class FileOpening_and_Paint():
             self.event_list.append((x1, y1, x2, y2, self.brush_color))
         #checks if the current tool selected is the eraser tool
         elif self.current_tool == "eraser":
-            #if self.event_list != []:
-            #    self.remove_latest_event()
             self.set_eraser_tool()
                        
     #called when the user releases the left mouse button after drawing on the canvas
