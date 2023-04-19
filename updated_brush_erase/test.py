@@ -20,6 +20,8 @@ class FileOpening_and_Paint():
         self.image = 0
         #initialize a list which stores all events
         self.event_list = []
+        self.last_x = None
+        self.last_y = None
         #settung up canvas and bindings
         self.create_widgets()
         self.setup_bindings()
@@ -64,6 +66,7 @@ class FileOpening_and_Paint():
             self.image = ImageTk.PhotoImage(image)
             #opens image into the canvas
             self.canvas.create_image(0, 0, anchor="nw", image=self.image)
+            self.event_list = []
 
     #sets up the event bindings for the canvas widget to enable drawing on the canvas with the brush tool    
     def setup_bindings(self):
@@ -102,7 +105,14 @@ class FileOpening_and_Paint():
 
     def remove_latest_event(self):
         #undoes last brush stroke
-        self.event_list.pop()
+        if (len(self.event_list) > 5):
+            self.event_list.pop()
+            self.event_list.pop()
+            self.event_list.pop()
+            self.event_list.pop()
+            self.event_list.pop()
+        else:
+            self.event_list.pop()
         self.canvas.delete("all")
         if self.image != 0:
             self.canvas.create_image(0, 0, anchor="nw", image=self.image)
@@ -113,15 +123,30 @@ class FileOpening_and_Paint():
     def draw_brush(self, event):
         #checks if the current tool selected is the brush tool
         if self.current_tool == "brush":
-            #gets the x and y coordinates of the mouse pointer from the event object
+    #gets the x and y coordinates of the mouse pointer from the event object
             x, y = event.x, event.y
-            #calculates the top-left corner of the oval to be drawn based on the current mouse position and the size of the brush
             x1, y1 = (x - self.brush_size), (y - self.brush_size)
             #calculates the bottom-right corner of the oval to be drawn based on the current mouse position and the size of the brush
             x2, y2 = (x + self.brush_size), (y + self.brush_size)
-            #creates an oval shape on the canvas with the calculated coordinates, fill color and outline color specified
-            self.canvas.create_oval(x1, y1, x2, y2, fill=self.brush_color, outline=self.brush_color)
-            self.event_list.append((x1, y1, x2, y2, self.brush_color))
+            #calculates the distance between the previous position and the current position
+            if (self.last_x != None) and (self.last_y != None):
+                distance = ((x - self.last_x) ** 2 + (y - self.last_y) ** 2) ** 0.5
+                #calculates the step size and direction between the previous position and the current position
+                step_x = (x - self.last_x) / distance if distance > 0 else 0
+                step_y = (y - self.last_y) / distance if distance > 0 else 0
+                #draw a sequence of small ovals between the previous position and the current position
+                for i in range(int(distance)):
+                    oval_x = int(self.last_x + i * step_x)
+                    oval_y = int(self.last_y + i * step_y)
+                    oval_x1, oval_y1 = (oval_x - self.brush_size), (oval_y - self.brush_size)
+                    oval_x2, oval_y2 = (oval_x + self.brush_size), (oval_y + self.brush_size)
+                    self.canvas.create_oval(oval_x1, oval_y1, oval_x2, oval_y2, fill=self.brush_color, outline=self.brush_color)
+                    self.event_list.append((oval_x1, oval_y1, oval_x2, oval_y2, self.brush_color))
+            else:
+                self.canvas.create_oval(x1, y1,  x2, y2, fill=self.brush_color, outline=self.brush_color)
+                self.event_list.append((x1, y1, x2, y2, self.brush_color))
+            #update the previous position with the current position
+            self.last_x, self.last_y = x, y
         #checks if the current tool selected is the eraser tool
         elif self.current_tool == "eraser":
             self.set_eraser_tool()
@@ -129,7 +154,8 @@ class FileOpening_and_Paint():
     #called when the user releases the left mouse button after drawing on the canvas
     def reset(self, event):
         #ensures that there is a new brush stroke from the current mouse position
-        self.previous_point = None
+        self.last_x = None
+        self.last_y = None
 
 
 #represents the main window frame of a Tkinter GUI application     
