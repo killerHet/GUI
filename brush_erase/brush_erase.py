@@ -26,12 +26,21 @@ class Paint:
         self.canvas.pack(fill=tk.BOTH, expand=True)
         #creates button widget
         self.brush_button = tk.Button(self.root, text="Brush", command=self.set_brush_tool)
-        #packs button widget into main wondow
+        #packs button widget into main window
         self.brush_button.pack(side=tk.RIGHT)
         #creates eraser button
         self.eraser_button = tk.Button(self.root, text="Eraser", command=self.set_eraser_tool)
         #packs eraser button into main window
         self.eraser_button.pack(side=tk.RIGHT)
+        #creates a Label widget with appropriate text and packs it into main window
+        brush_size_label = tk.Label(self.root, text="Brush Size:")
+        #label appears on the left side
+        brush_size_label.pack(side=tk.LEFT)
+        #creates horizontal scale widget with values ranging from 1 to 50
+        self.brush_size_scale = tk.Scale(self.root, from_=1, to=50, orient=tk.HORIZONTAL, command=self.set_brush_size)
+        #sets brush size to whatever the value in the scale is
+        self.brush_size_scale.set(self.brush_size)
+        self.brush_size_scale.pack(side=tk.LEFT)
 
     #sets up the event bindings for the canvas widget to enable drawing on the canvas with the brush tool    
     def setup_bindings(self):
@@ -53,6 +62,10 @@ class Paint:
         self.current_tool = "eraser"
         #changes the cursor for the canvas widget to a tcross icon
         self.canvas.config(cursor="tcross")
+
+    #updates brush size with whatever the value in the scale is
+    def set_brush_size(self, size):
+        self.brush_size = int(size)
 
     #implements the drawing functionality for the brush and eraser tools, depending on the current tool selected by the user  
     def draw_brush(self, event):
